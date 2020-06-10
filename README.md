@@ -1,6 +1,8 @@
-<<<<<<< HEAD
 # budongsango
-한국 아파트 실거래가 go lang
-=======
-# budongsango
->>>>>>> 92646d0eb38e30e50ad2175fb97eb3e8d55ee840
+## 한국 아파트 실거래가 go lang
+go 언어로 개발하는 한국 아파트 실거래가 라이브러리입니다.
+
+[공공데이터포털](https://www.data.go.kr)에서 제공하는 [아파트매매 실거래 상세 자료](https://www.data.go.kr/data/15057511/openapi.do)를 사용하여 데이터를 처리합니다.
+```
+var serviceKey = 
+```
