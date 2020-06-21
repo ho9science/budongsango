@@ -1,11 +1,14 @@
 package main
 
 import (
+	"os"
+	"encoding/csv"
 	"encoding/xml"
 	"fmt"
 	"net/http"
 	"log"
 	"io/ioutil"
+	"time"
 )
 type Response struct {
 	XMLName xml.Name `xml:"response"`
@@ -73,25 +76,58 @@ type Item struct {
 	return data, nil
   }
 
+  func nextDate(targetDate string)(string){
+	
+	layout := "060102"
+	
+	t, err := time.Parse(layout, targetDate)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	nextDay := 1
+	nextDate := t.AddDate(0, 0, +nextDay).Format(layout)
+
+	return nextDate
+  }
+  
+  func readCode()([][]string){
+	csvfile, err := os.Open("code/refined_code.csv")
+	if err != nil {
+		fmt.Println("Couldn't open the csv file", err)
+	}
+	reader := csv.NewReader(csvfile)
+	reader.Comma = ','
+	data, err := reader.ReadAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return data
+  }
+
   func main(){
 
 	var url = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
 	var serviceKey = ""	
-	var LAWD_CD = "11110"
-  	var DEAL_YMD = "200512" //200601
-	url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
-	log.Printf(url)
-	if xmlBytes, err := getXML(url); err != nil {
-		log.Printf("Failed to get XML: %v", err)
-	  } else {
-		var result Response
-		err := xml.Unmarshal(xmlBytes, &result)
-		if err != nil {
-			log.Printf("error: %v", err)
+	codeList := readCode()
+	var LAWD_CD = "11000"
+	var DEAL_YMD = "200601" //200601
+	for _, v := range codeList{
+		LAWD_CD = v[0]
+		url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
+		if xmlBytes, err := getXML(url); err != nil {
+			log.Printf("Failed to get XML: %v", err)
+		} else {
+			var result Response
+			err := xml.Unmarshal(xmlBytes, &result)
+			if err != nil {
+				log.Printf("error: %v", err)
+			}
+			var Items = result.Body.Items.Item
+			for i := 0; i < len(Items); i++ {
+				log.Printf(Items[i].ResultCode)
+			}
 		}
-		var Items = result.Body.Items.Item
-		for i := 0; i < len(Items); i++ {
-			log.Printf(Items[i].ResultCode)
-		}
-	  }
 	}
+  }
