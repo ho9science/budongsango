@@ -76,6 +76,22 @@ type Item struct {
 	return data, nil
   }
 
+  func startDate()(string){
+	nowFile, err := ioutil.ReadFile("now")
+	if err != nil {
+		fmt.Println("couldn't open now")
+	}
+	return string(nowFile)
+  }
+
+  func saveLast(last string)(){
+	tomorrow := []byte(last)
+	err := ioutil.WriteFile("now", tomorrow, 0644)
+	if err != nil {
+	  fmt.Println("couldn't see tomorrow")
+	}
+  }
+
   func nextDate(targetDate string)(string){
 	
 	layout := "060102"
@@ -106,28 +122,45 @@ type Item struct {
 	return data
   }
 
-  func main(){
+  func getServiceKey()(string){
+	  serviceKey, err := ioutil.ReadFile("servicekey")
+	  if err != nil {
+		fmt.Println("not found service key")
+	  }
+	  return string(serviceKey)
+  }
 
+  func main(){
+	count := 0
 	var url = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
-	var serviceKey = ""	
+	var serviceKey = getServiceKey()
 	codeList := readCode()
 	var LAWD_CD = "11000"
-	var DEAL_YMD = "200601" //200601
-	for _, v := range codeList{
-		LAWD_CD = v[0]
-		url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
-		if xmlBytes, err := getXML(url); err != nil {
-			log.Printf("Failed to get XML: %v", err)
-		} else {
-			var result Response
-			err := xml.Unmarshal(xmlBytes, &result)
-			if err != nil {
-				log.Printf("error: %v", err)
-			}
-			var Items = result.Body.Items.Item
-			for i := 0; i < len(Items); i++ {
-				log.Printf(Items[i].ResultCode)
+	var DEAL_YMD = startDate() //200601
+	
+	for {
+		for _, v := range codeList{
+			LAWD_CD = v[0]
+			url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
+			if xmlBytes, err := getXML(url); err != nil {
+				log.Printf("Failed to get XML: %v", err)
+			} else {
+				var result Response
+				err := xml.Unmarshal(xmlBytes, &result)
+				if err != nil {
+					log.Printf("error: %v", err)
+				}
+				var Items = result.Body.Items.Item
+				for i := 0; i < len(Items); i++ {
+					log.Printf(Items[i].ResultCode)
+				}
 			}
 		}
+		DEAL_YMD = nextDate(DEAL_YMD)
+		if  count >= 365 {
+			saveLast(DEAL_YMD)
+			break
+		}
+		count++
 	}
-  }
+}
