@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"os"
 	"encoding/csv"
 	"encoding/xml"
@@ -9,6 +11,8 @@ import (
 	"log"
 	"io/ioutil"
 	"time"
+	"strings"
+	"strconv"
 )
 type Response struct {
 	XMLName xml.Name `xml:"response"`
@@ -49,8 +53,8 @@ type Item struct {
 	EubmyundongCode string `xml:"법정동읍면동코드"`
 	LandCode string `xml:"법정동지번코드"`
 	ApartmentName string `xml:"아파트"`
-	DealMonth string `xml:"월"`
-	DealDay string `xml:"일"`
+	DealMonth int `xml:"월"`
+	DealDay int `xml:"일"`
 	AreaForExclusiveUse float64 `xml:"전용면적"`
 	Jibun string `xml:"지번"`
 	RegionalCode string `xml:"지역코드"`
@@ -129,8 +133,19 @@ type Item struct {
 	  }
 	  return string(serviceKey)
   }
+  func padNumberWithZero(value int) string {
+	return fmt.Sprintf("%02d", value)
+  }
 
   func main(){
+	  //connect Database
+	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
+	if err != nil {
+        panic(err.Error())
+	}
+	defer db.Close()
+	sqlStr := "INSERT INTO BUDONGSAN.APT_REAL(DEALDATE, DEALAMOUNT, BUILDYEAR, ROADNAME, ROADNAMEBONBUN, ROADNAMEBUNBUN, ROADNAMECODE, DONG, JIBUN, APARTMENTNAME, AREAFOREXCLUSIVEUSE, REGIONCODE, REGIONNAME, FlOOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
 	count := 0
 	var url = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
 	var serviceKey = getServiceKey()
@@ -139,9 +154,10 @@ type Item struct {
 	var DEAL_YMD = startDate() //200601
 	
 	for {
-		for _, v := range codeList{
-			LAWD_CD = v[0]
+		for _, codeValue := range codeList{
+			LAWD_CD = codeValue[0]
 			url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
+			url += "&pageNo=1&numOfRows=1000"
 			if xmlBytes, err := getXML(url); err != nil {
 				log.Printf("Failed to get XML: %v", err)
 			} else {
@@ -152,7 +168,28 @@ type Item struct {
 				}
 				var Items = result.Body.Items.Item
 				for i := 0; i < len(Items); i++ {
-					log.Printf(Items[i].ResultCode)
+					stmt, _ := db.Prepare(sqlStr)
+					layout1 := "2006-01-02"
+					layout2 := "2006"
+					str := Items[i].RealYear+"-"+padNumberWithZero(Items[i].DealMonth)+"-"+padNumberWithZero(Items[i].DealDay)
+					dealDate, err := time.Parse(layout1, str)
+					if err != nil {
+						log.Printf("error: %v", err)
+					}
+					buildYear, err := time.Parse(layout2, Items[i].BuildYear)
+					if err != nil {
+						log.Printf("error: %v", err)
+					}		
+					dealAmountStr := strings.TrimSpace(strings.Replace(Items[i].DealAmount, ",", "", -1))
+					dealAmount, err := strconv.Atoi(dealAmountStr)
+					
+					_, err = stmt.Exec(dealDate, dealAmount, buildYear, Items[i].RoadName, Items[i].RoadNameBonbun, Items[i].RoadNameBunbun, Items[i].RoadNameCode, 
+					Items[i].Dong, Items[i].Jibun, Items[i].ApartmentName, Items[i].AreaForExclusiveUse, Items[i].RegionalCode, codeValue[1], Items[i].Floor)
+					if err != nil {
+						log.Printf("error: %v", err)
+					}
+					fmt.Println("num:", i)
+					defer stmt.Close()
 				}
 			}
 		}
