@@ -138,6 +138,13 @@ type Item struct {
   }
 
   func main(){
+	// open log file
+	f, err := os.OpenFile("system.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 666)
+	if err != nil{
+		log.Fatalf("error open log file")
+	}
+	defer f.Close();
+	
 	  //connect Database
 	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
 	if err != nil {
@@ -188,7 +195,6 @@ type Item struct {
 					if err != nil {
 						log.Printf("error: %v", err)
 					}
-					fmt.Println("num:", i)
 					defer stmt.Close()
 				}
 			}
@@ -200,4 +206,5 @@ type Item struct {
 		}
 		count++
 	}
+	log.SetOutput(f)
 }
