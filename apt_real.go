@@ -154,11 +154,11 @@ type Item struct {
 	sqlStr := "INSERT INTO BUDONGSAN.APT_REAL(DEALDATE, DEALAMOUNT, BUILDYEAR, ROADNAME, ROADNAMEBONBUN, ROADNAMEBUNBUN, ROADNAMECODE, DONG, JIBUN, APARTMENTNAME, AREAFOREXCLUSIVEUSE, REGIONCODE, REGIONNAME, FlOOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	count := 0
-	var url = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
+	url := "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
 	serviceKey := getServiceKey()
-	var codeList = readCode()
-	var LAWD_CD = "11000"
-	var DEAL_YMD = startYearMonth() //200601
+	codeList := readCode()
+	LAWD_CD := "11000"
+	DEAL_YMD := startYearMonth() //200601
 	
 	for {
 		for _, codeValue := range codeList{
