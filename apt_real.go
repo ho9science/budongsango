@@ -85,7 +85,7 @@ type Item struct {
 	if err != nil {
 		log.Fatalf("couldn't open now")
 	}
-	return string(nowFile)
+	return strings.TrimSuffix(string(nowFile), "\n")
   }
 
   func saveLast(last string)(){
@@ -154,7 +154,7 @@ type Item struct {
 	sqlStr := "INSERT INTO BUDONGSAN.APT_REAL(DEALDATE, DEALAMOUNT, BUILDYEAR, ROADNAME, ROADNAMEBONBUN, ROADNAMEBUNBUN, ROADNAMECODE, DONG, JIBUN, APARTMENTNAME, AREAFOREXCLUSIVEUSE, REGIONCODE, REGIONNAME, FlOOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	count := 0
-	url := "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
+	url1 := "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
 	serviceKey := getServiceKey()
 	codeList := readCode()
 	LAWD_CD := "11000"
@@ -163,7 +163,7 @@ type Item struct {
 	for {
 		for _, codeValue := range codeList{
 			LAWD_CD = codeValue[0]
-			url = url+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
+			url := url1+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
 			if xmlBytes, err := getXML(url); err != nil {
 				log.Fatalf("Failed to get XML: %v", err)
 			} else {
