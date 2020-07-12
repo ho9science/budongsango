@@ -163,7 +163,7 @@ type Item struct {
 	for {
 		for _, codeValue := range codeList{
 			LAWD_CD = codeValue[0]
-			url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey+"&pageNo=1&numOfRows=1000"
+			url = url+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
 			if xmlBytes, err := getXML(url); err != nil {
 				log.Fatalf("Failed to get XML: %v", err)
 			} else {
