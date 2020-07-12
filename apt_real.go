@@ -103,7 +103,7 @@ type Item struct {
 	t, err := time.Parse(layout, targetDate)
 
 	if err != nil {
-		log.Fatalf(err)
+		fmt.Println(err)
 	}
 
 	nextDay := 1
@@ -121,7 +121,7 @@ type Item struct {
 	reader.Comma = ','
 	data, err := reader.ReadAll()
 	if err != nil {
-		log.Fatalf(err)
+		fmt.Println(err)
 	}
 	return data
   }
