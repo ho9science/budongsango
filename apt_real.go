@@ -76,7 +76,7 @@ type Item struct {
 	if err != nil {
 	  return []byte{}, fmt.Errorf("Read body: %v", err)
 	}
-  
+
 	return data, nil
   }
 
@@ -131,7 +131,7 @@ type Item struct {
 	  if err != nil {
 		log.Fatalf("not found service key")
 	  }
-	  return string(serviceKey)
+	  return strings.TrimSuffix(string(serviceKey), "\n")
   }
   func padNumberWithZero(value int) string {
 	return fmt.Sprintf("%02d", value)
