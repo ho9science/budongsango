@@ -155,15 +155,15 @@ type Item struct {
 
 	count := 0
 	var url = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev?"
-	var serviceKey = getServiceKey()
-	codeList := readCode()
+	serviceKey := getServiceKey()
+	var codeList = readCode()
 	var LAWD_CD = "11000"
 	var DEAL_YMD = startYearMonth() //200601
 	
 	for {
 		for _, codeValue := range codeList{
 			LAWD_CD = codeValue[0]
-			url = url+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
+			url = url+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
 			if xmlBytes, err := getXML(url); err != nil {
 				log.Fatalf("Failed to get XML: %v", err)
 			} else {
