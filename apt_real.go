@@ -64,17 +64,17 @@ type Item struct {
   func getXML(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-	  return []byte{}, fmt.Errorf("GET error: %v", err)
+	  return []byte{}, log.Fatalf("GET error: %v", err)
 	}
 	defer resp.Body.Close()
   
 	if resp.StatusCode != http.StatusOK {
-	  return []byte{}, fmt.Errorf("Status error: %v", resp.StatusCode)
+	  return []byte{}, log.Fatalf("Status error: %v", resp.StatusCode)
 	}
   
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-	  return []byte{}, fmt.Errorf("Read body: %v", err)
+	  return []byte{}, log.Fatalf("Read body: %v", err)
 	}
   
 	return data, nil
@@ -83,7 +83,7 @@ type Item struct {
   func startDate()(string){
 	nowFile, err := ioutil.ReadFile("now")
 	if err != nil {
-		fmt.Println("couldn't open now")
+		log.Fatalf("couldn't open now")
 	}
 	return string(nowFile)
   }
@@ -92,7 +92,7 @@ type Item struct {
 	tomorrow := []byte(last)
 	err := ioutil.WriteFile("now", tomorrow, 0644)
 	if err != nil {
-	  fmt.Println("couldn't see tomorrow")
+		log.Fatalf("couldn't see tomorrow")
 	}
   }
 
@@ -103,7 +103,7 @@ type Item struct {
 	t, err := time.Parse(layout, targetDate)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf(err)
 	}
 
 	nextDay := 1
@@ -115,13 +115,13 @@ type Item struct {
   func readCode()([][]string){
 	csvfile, err := os.Open("code/refined_code.csv")
 	if err != nil {
-		fmt.Println("Couldn't open the csv file", err)
+		log.Fatalf("Couldn't open the csv file", err)
 	}
 	reader := csv.NewReader(csvfile)
 	reader.Comma = ','
 	data, err := reader.ReadAll()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf(err)
 	}
 	return data
   }
@@ -129,7 +129,7 @@ type Item struct {
   func getServiceKey()(string){
 	  serviceKey, err := ioutil.ReadFile("servicekey")
 	  if err != nil {
-		fmt.Println("not found service key")
+		log.Fatalf("not found service key")
 	  }
 	  return string(serviceKey)
   }
@@ -139,7 +139,7 @@ type Item struct {
 
   func main(){
 	// open log file
-	f, err := os.OpenFile("system.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 666)
+	f, err := os.OpenFile("system.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil{
 		log.Fatalf("error open log file")
 	}
@@ -163,15 +163,14 @@ type Item struct {
 	for {
 		for _, codeValue := range codeList{
 			LAWD_CD = codeValue[0]
-			url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey
-			url += "&pageNo=1&numOfRows=1000"
+			url = url+"LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD +"&serviceKey="+serviceKey+"&pageNo=1&numOfRows=1000"
 			if xmlBytes, err := getXML(url); err != nil {
-				log.Printf("Failed to get XML: %v", err)
+				log.Fatalf("Failed to get XML: %v", err)
 			} else {
 				var result Response
 				err := xml.Unmarshal(xmlBytes, &result)
 				if err != nil {
-					log.Printf("error: %v", err)
+					log.Fatalf("error: %v", err)
 				}
 				var Items = result.Body.Items.Item
 				for i := 0; i < len(Items); i++ {
@@ -181,11 +180,11 @@ type Item struct {
 					str := Items[i].RealYear+"-"+padNumberWithZero(Items[i].DealMonth)+"-"+padNumberWithZero(Items[i].DealDay)
 					dealDate, err := time.Parse(layout1, str)
 					if err != nil {
-						log.Printf("error: %v", err)
+						log.Fatalf("error: %v", err)
 					}
 					buildYear, err := time.Parse(layout2, Items[i].BuildYear)
 					if err != nil {
-						log.Printf("error: %v", err)
+						log.Fatalf("error: %v", err)
 					}		
 					dealAmountStr := strings.TrimSpace(strings.Replace(Items[i].DealAmount, ",", "", -1))
 					dealAmount, err := strconv.Atoi(dealAmountStr)
@@ -193,7 +192,7 @@ type Item struct {
 					_, err = stmt.Exec(dealDate, dealAmount, buildYear, Items[i].RoadName, Items[i].RoadNameBonbun, Items[i].RoadNameBunbun, Items[i].RoadNameCode, 
 					Items[i].Dong, Items[i].Jibun, Items[i].ApartmentName, Items[i].AreaForExclusiveUse, Items[i].RegionalCode, codeValue[1], Items[i].Floor)
 					if err != nil {
-						log.Printf("error: %v", err)
+						log.Fatalf("error: %v", err)
 					}
 					defer stmt.Close()
 				}
