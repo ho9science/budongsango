@@ -80,7 +80,7 @@ type Item struct {
 	return data, nil
   }
 
-  func startDate()(string){
+  func startYearMonth()(string){
 	nowFile, err := ioutil.ReadFile("now")
 	if err != nil {
 		log.Fatalf("couldn't open now")
@@ -96,9 +96,9 @@ type Item struct {
 	}
   }
 
-  func nextDate(targetDate string)(string){
+  func nextMonth(targetDate string)(string){
 	
-	layout := "060102"
+	layout := "200601"
 	
 	t, err := time.Parse(layout, targetDate)
 
@@ -106,10 +106,10 @@ type Item struct {
 		fmt.Println(err)
 	}
 
-	nextDay := 1
-	nextDate := t.AddDate(0, 0, +nextDay).Format(layout)
+	addMonth := 1
+	nextMonth := t.AddDate(0, +addMonth, 0).Format(layout)
 
-	return nextDate
+	return nextMonth
   }
   
   func readCode()([][]string){
@@ -158,7 +158,7 @@ type Item struct {
 	var serviceKey = getServiceKey()
 	codeList := readCode()
 	var LAWD_CD = "11000"
-	var DEAL_YMD = startDate() //200601
+	var DEAL_YMD = startYearMonth() //200601
 	
 	for {
 		for _, codeValue := range codeList{
@@ -198,8 +198,8 @@ type Item struct {
 				}
 			}
 		}
-		DEAL_YMD = nextDate(DEAL_YMD)
-		if  count >= 365 {
+		DEAL_YMD = nextMonth(DEAL_YMD)
+		if  count >= 12 {
 			saveLast(DEAL_YMD)
 			break
 		}
