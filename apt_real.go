@@ -163,7 +163,7 @@ type Item struct {
 	for {
 		for _, codeValue := range codeList{
 			LAWD_CD = codeValue[0]
-			url := url1+"&pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
+			url := url1+"pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
 			if xmlBytes, err := getXML(url); err != nil {
 				log.Fatalf("Failed to get XML: %v", err)
 			} else {
@@ -175,9 +175,12 @@ type Item struct {
 				var Items = result.Body.Items.Item
 				for i := 0; i < len(Items); i++ {
 					stmt, _ := db.Prepare(sqlStr)
+					defer stmt.Close()
+
 					layout1 := "2006-01-02"
 					layout2 := "2006"
 					str := Items[i].RealYear+"-"+padNumberWithZero(Items[i].DealMonth)+"-"+padNumberWithZero(Items[i].DealDay)
+				
 					dealDate, err := time.Parse(layout1, str)
 					if err != nil {
 						log.Fatalf("error: %v", err)
@@ -194,7 +197,7 @@ type Item struct {
 					if err != nil {
 						log.Fatalf("error: %v", err)
 					}
-					defer stmt.Close()
+					
 				}
 			}
 		}
