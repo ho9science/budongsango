@@ -148,7 +148,7 @@ type Item struct {
 	  //connect Database
 	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
 	if err != nil {
-        panic(err.Error())
+    	panic(err.Error())
 	}
 	defer db.Close()
 	sqlStr := "INSERT INTO BUDONGSAN.APT_REAL(DEALDATE, DEALAMOUNT, BUILDYEAR, ROADNAME, ROADNAMEBONBUN, ROADNAMEBUNBUN, ROADNAMECODE, DONG, JIBUN, APARTMENTNAME, AREAFOREXCLUSIVEUSE, REGIONCODE, REGIONNAME, FlOOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -160,11 +160,18 @@ type Item struct {
 	LAWD_CD := "11000"
 	DEAL_YMD := startYearMonth() //200601
 	
+	stmt, _ := db.Prepare(sqlStr)
+	defer stmt.Close()
+	temp := 349 //시작할 code index
 	for {
-		for _, codeValue := range codeList{
+		for i, codeValue := range codeList{
+			if i < temp{
+				continue
+			}
 			LAWD_CD = codeValue[0]
 			url := url1+"pageNo=1&numOfRows=1000&LAWD_CD="+LAWD_CD+"&DEAL_YMD="+DEAL_YMD+"&serviceKey="+serviceKey
 			if xmlBytes, err := getXML(url); err != nil {
+				log.Println("LAWD_CD:"+LAWD_CD+" DEAL_YMD:"+DEAL_YMD+" seq:", i)
 				log.Fatalf("Failed to get XML: %v", err)
 			} else {
 				var result Response
@@ -173,10 +180,8 @@ type Item struct {
 					log.Fatalf("error: %v", err)
 				}
 				var Items = result.Body.Items.Item
-				for i := 0; i < len(Items); i++ {
-					stmt, _ := db.Prepare(sqlStr)
-					defer stmt.Close()
 
+				for i := 0; i < len(Items); i++ {
 					layout1 := "2006-01-02"
 					layout2 := "2006"
 					str := Items[i].RealYear+"-"+padNumberWithZero(Items[i].DealMonth)+"-"+padNumberWithZero(Items[i].DealDay)
@@ -191,7 +196,9 @@ type Item struct {
 					}		
 					dealAmountStr := strings.TrimSpace(strings.Replace(Items[i].DealAmount, ",", "", -1))
 					dealAmount, err := strconv.Atoi(dealAmountStr)
-					
+					if err != nil {
+						dealAmount = 0
+					}
 					_, err = stmt.Exec(dealDate, dealAmount, buildYear, Items[i].RoadName, Items[i].RoadNameBonbun, Items[i].RoadNameBunbun, Items[i].RoadNameCode, 
 					Items[i].Dong, Items[i].Jibun, Items[i].ApartmentName, Items[i].AreaForExclusiveUse, Items[i].RegionalCode, codeValue[1], Items[i].Floor)
 					if err != nil {
@@ -200,12 +207,17 @@ type Item struct {
 					
 				}
 			}
+			if i%50 == 0{
+				log.Println("LAWD_CD:"+LAWD_CD+" DEAL_YMD:"+DEAL_YMD)
+				time.Sleep(60000 * time.Millisecond) // 강제 호출 종료를 막기 위한 1분 대기
+			}
 		}
 		DEAL_YMD = nextMonth(DEAL_YMD)
-		if  count >= 12 {
+		if  count >= 11 {
 			saveLast(DEAL_YMD)
 			break
 		}
+		temp = 0
 		count++
 	}
 	log.SetOutput(f)
