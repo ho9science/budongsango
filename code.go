@@ -64,8 +64,20 @@ func main() {
 
 		lawd_cd := row[0][0:5]
 		location := strings.Split(row[1], " ")
+		disable := row[2]
+		if disable == "폐지" {
+			continue
+		}
 		if(len(location)>1){
 			m[lawd_cd] = location[0]+" "+location[1]
+			if location[0] == "세종특별자치시"{
+				m[lawd_cd] = location[0]
+			}
+			if(len(location)>2){
+				if (len(location[2])>=9 && strings.LastIndex(location[2], "구") > 3) || (len(location[2])==6 && strings.LastIndex(location[2], "구")== 3){
+					m[lawd_cd] = location[0]+" "+location[1] + " " + location[2]
+				}
+			}			
 		}
 		
 	}
@@ -76,7 +88,5 @@ func main() {
 	sort.Strings(keys)
 
 	writeCSVFile(m, keys)
-
-		
 
 }
